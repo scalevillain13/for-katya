@@ -25,6 +25,42 @@
     window.addEventListener("orientationchange", () => {
       setTimeout(setViewportHeight, 100);
     });
+
+    if (isMobile) {
+      const lockHorizontalScroll = () => {
+        if (window.scrollX !== 0) {
+          window.scrollTo(0, window.scrollY);
+        }
+      };
+      window.addEventListener("scroll", lockHorizontalScroll, { passive: true });
+      document.addEventListener("scroll", lockHorizontalScroll, { passive: true, capture: true });
+
+      let startX = 0;
+      let startY = 0;
+      document.addEventListener(
+        "touchstart",
+        (e) => {
+          if (e.touches.length === 1) {
+            startX = e.touches[0].clientX;
+            startY = e.touches[0].clientY;
+          }
+        },
+        { passive: true }
+      );
+
+      document.addEventListener(
+        "touchmove",
+        (e) => {
+          if (e.touches.length !== 1) return;
+          const dx = Math.abs(e.touches[0].clientX - startX);
+          const dy = Math.abs(e.touches[0].clientY - startY);
+          if (dx > dy && dx > 8) {
+            e.preventDefault();
+          }
+        },
+        { passive: false }
+      );
+    }
   }
 
   function initSmoothScroll() {
@@ -438,7 +474,7 @@
         rise: { opacity: 0, y: 60, scale: 0.9, duration: 1 },
         unfurl: { opacity: 0, scaleX: 0.3, transformOrigin: "center center", duration: 1 },
         "fade-scale": { opacity: 0, scale: 0.5, duration: 0.9, ease: "back.out(1.4)" },
-        "slide-left": { opacity: 0, x: isMobile ? 30 : 80, duration: 0.9 },
+        "slide-left": { opacity: 0, x: isMobile ? 0 : 80, duration: 0.9 },
         "rotate-in": { opacity: 0, rotation: use3D ? -10 : 0, scale: 0.85, duration: 1 },
       };
 
