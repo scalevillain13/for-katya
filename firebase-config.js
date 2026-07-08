@@ -1,7 +1,7 @@
 /**
  * Firebase — комната «Смотрим вместе» (см. WATCH_ROOM_SETUP.md)
  */
-const FIREBASE_CONFIG = {
+window.FIREBASE_CONFIG = {
   apiKey: "AIzaSyDTTAp2Vs2KOCkKLA7PpTCsRbvoZAW_QAI",
   authDomain: "for-katya-watch.firebaseapp.com",
   databaseURL: "https://for-katya-watch-default-rtdb.europe-west1.firebasedatabase.app",
@@ -11,7 +11,7 @@ const FIREBASE_CONFIG = {
   appId: "1:600209589229:web:c796eb8c48e0732f69dde4",
 };
 
-const WATCH_ROOM_DEFAULT = {
+window.WATCH_ROOM_DEFAULT = {
   roomId: "bulka-katya-room",
   yourDefaultName: "",
 };

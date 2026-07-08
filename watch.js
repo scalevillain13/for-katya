@@ -5,7 +5,10 @@
   const SEEK_DEBOUNCE_MS = 400;
 
   let db = null;
-  let myId = crypto.randomUUID();
+  let myId =
+    typeof crypto !== "undefined" && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `u-${Date.now()}-${Math.random().toString(36).slice(2)}`;
   let roomId = "";
   let myName = "";
   let player = null;
@@ -19,17 +22,28 @@
   let chatRef = null;
   let pendingRemotePlayback = null;
 
+  function getFirebaseConfig() {
+    return window.FIREBASE_CONFIG || (typeof FIREBASE_CONFIG !== "undefined" ? FIREBASE_CONFIG : null);
+  }
+
+  function getRoomDefaults() {
+    return window.WATCH_ROOM_DEFAULT || (typeof WATCH_ROOM_DEFAULT !== "undefined" ? WATCH_ROOM_DEFAULT : null);
+  }
+
   // ---- Firebase check ----
   function isFirebaseConfigured() {
-    if (typeof FIREBASE_CONFIG === "undefined") return false;
-    const key = FIREBASE_CONFIG.apiKey || "";
-    return key && !key.includes("ВСТАВЬ");
+    const config = getFirebaseConfig();
+    if (!config) return false;
+    const key = config.apiKey || "";
+    return key.length > 10 && !key.includes("ВСТАВЬ");
   }
 
   function initFirebase() {
     if (!isFirebaseConfigured()) return false;
+    const config = getFirebaseConfig();
+    if (!window.firebase) return false;
     if (!firebase.apps.length) {
-      firebase.initializeApp(FIREBASE_CONFIG);
+      firebase.initializeApp(config);
     }
     db = firebase.database();
     return true;
@@ -238,10 +252,12 @@
   }
 
   // ---- Screens ----
-  function showSetupScreen() {
+  function showSetupScreen(reason) {
     document.getElementById("setup-screen").hidden = false;
     document.getElementById("join-screen").hidden = true;
     document.getElementById("room-screen").hidden = true;
+    const hint = document.getElementById("setup-reason");
+    if (hint && reason) hint.textContent = reason;
   }
 
   function enterRoom(name, room) {
@@ -285,16 +301,18 @@
     const nameInput = document.getElementById("join-name");
     const roomInput = document.getElementById("join-room");
 
+    const defaults = getRoomDefaults();
+
     nameInput.value =
       params.get("name") ||
       sessionStorage.getItem("watch-name") ||
-      (typeof WATCH_ROOM_DEFAULT !== "undefined" ? WATCH_ROOM_DEFAULT.yourDefaultName : "") ||
+      (defaults ? defaults.yourDefaultName : "") ||
       "";
 
     roomInput.value =
       params.get("room") ||
       sessionStorage.getItem("watch-room") ||
-      (typeof WATCH_ROOM_DEFAULT !== "undefined" ? WATCH_ROOM_DEFAULT.roomId : "bulka-katya-room");
+      (defaults ? defaults.roomId : "bulka-katya-room");
 
     document.getElementById("join-form").addEventListener("submit", (e) => {
       e.preventDefault();
@@ -334,8 +352,14 @@
   }
 
   // ---- Boot ----
-  if (!initFirebase()) {
-    showSetupScreen();
+  if (!isFirebaseConfigured()) {
+    showSetupScreen(
+      "Не загрузился файл firebase-config.js. Обнови страницу (Ctrl+F5) или открой через сайт, а не локальный файл."
+    );
+  } else if (!window.firebase) {
+    showSetupScreen("Не загрузилась библиотека Firebase. Проверь интернет и отключи блокировщик рекламы на этой странице.");
+  } else if (!initFirebase()) {
+    showSetupScreen("Firebase не подключился. Проверь ключи в firebase-config.js и правила базы (Rules → Publish).");
   } else {
     initJoinForm();
     initRoomControls();

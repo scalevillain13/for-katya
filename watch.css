@@ -80,6 +80,12 @@ input {
   margin-bottom: 0.75rem;
 }
 
+.setup-reason {
+  color: var(--blush-deep);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
 .join-back,
 .setup-back {
   display: inline-block;
