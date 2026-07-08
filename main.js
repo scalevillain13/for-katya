@@ -23,9 +23,23 @@
     document.getElementById("closing-btn").textContent = content.closing.buttonText;
     document.getElementById("closing-hidden").textContent = content.closing.hiddenMessage;
 
+    if (content.ritualsTitle) {
+      document.getElementById("rituals-title").textContent = content.ritualsTitle;
+    }
+    if (content.artSection) {
+      document.getElementById("art-title").textContent = content.artSection.title;
+      document.getElementById("art-subtitle").textContent = content.artSection.subtitle;
+      document.getElementById("art-label").textContent = content.artSection.label;
+    }
+    if (content.wishesTitle) {
+      document.getElementById("wishes-title").textContent = content.wishesTitle;
+    }
+
     renderGallery();
     renderReasons();
+    renderRituals();
     renderLoveNotes();
+    renderWishes();
     updateDaysCounter();
   }
 
@@ -62,6 +76,29 @@
         <p class="reason-card-text">${r.text}</p>
       </article>`
       )
+      .join("");
+  }
+
+  function renderRituals() {
+    const grid = document.getElementById("rituals-grid");
+    if (!grid || !content.rituals) return;
+    grid.innerHTML = content.rituals
+      .map(
+        (r) => `
+      <article class="ritual-card">
+        <span class="ritual-icon" aria-hidden="true">${r.icon}</span>
+        <h3 class="ritual-title">${r.title}</h3>
+        <p class="ritual-text">${r.text}</p>
+      </article>`
+      )
+      .join("");
+  }
+
+  function renderWishes() {
+    const list = document.getElementById("wishes-list");
+    if (!list || !content.wishes) return;
+    list.innerHTML = content.wishes
+      .map((w) => `<li class="wish-item"><span class="wish-bullet">✦</span>${w}</li>`)
       .join("");
   }
 
@@ -143,6 +180,16 @@
       count: 8,
     });
 
+    createAmbientShapes(document.querySelector(".ambient-rituals"), {
+      types: ["candy", "tv", "heart"],
+      count: 10,
+    });
+
+    createAmbientShapes(document.querySelector(".ambient-art"), {
+      types: ["heart", "star", "circle"],
+      count: 14,
+    });
+
     createAmbientShapes(document.querySelector(".ambient-notes"), {
       types: ["heart", "star", "circle"],
       count: 12,
@@ -151,6 +198,11 @@
     createAmbientShapes(document.querySelector(".ambient-counter"), {
       types: ["heart", "star"],
       count: 6,
+    });
+
+    createAmbientShapes(document.querySelector(".ambient-wishes"), {
+      types: ["star", "heart", "dot"],
+      count: 8,
     });
 
     createAmbientShapes(document.querySelector(".ambient-closing"), {
@@ -342,6 +394,36 @@
       },
     });
 
+    // Ritual cards
+    gsap.from(".ritual-card", {
+      opacity: 0,
+      y: 50,
+      scale: 0.92,
+      stagger: 0.15,
+      duration: 0.8,
+      ease: "back.out(1.2)",
+      scrollTrigger: {
+        trigger: "#rituals-grid",
+        start: "top 80%",
+        toggleActions: "play none none reverse",
+      },
+    });
+
+    // Wishes
+    gsap.from(".wish-item", {
+      opacity: 0,
+      x: isMobile ? 0 : -40,
+      y: isMobile ? 30 : 0,
+      stagger: 0.12,
+      duration: 0.7,
+      ease: "power2.out",
+      scrollTrigger: {
+        trigger: "#wishes-list",
+        start: "top 82%",
+        toggleActions: "play none none reverse",
+      },
+    });
+
     // Love notes — varied entrances
     document.querySelectorAll(".love-note").forEach((note) => {
       const type = note.dataset.animation;
@@ -444,6 +526,28 @@
         start: "top 80%",
         toggleActions: "play none none reverse",
       },
+    });
+  }
+
+  // ---- Canvas art ----
+  let canvasArt = null;
+
+  function initCanvasArt() {
+    const canvas = document.getElementById("love-canvas");
+    if (!canvas || !window.LoveCanvasArt) return;
+
+    canvasArt = new LoveCanvasArt(canvas);
+
+    ScrollTrigger.create({
+      trigger: "#art",
+      start: "top 70%",
+      once: true,
+      onEnter: () => canvasArt.play(),
+    });
+
+    document.getElementById("art-replay-btn")?.addEventListener("click", () => {
+      canvasArt.reset();
+      setTimeout(() => canvasArt.play(), 100);
     });
   }
 
@@ -553,5 +657,6 @@
   populateContent();
   initAmbient();
   initIntro();
+  initCanvasArt();
   initEasterEggs();
 })();

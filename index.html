@@ -69,6 +69,29 @@
         </div>
       </section>
 
+      <!-- RITUALS -->
+      <section class="section section-rituals" id="rituals">
+        <div class="ambient ambient-rituals" aria-hidden="true"></div>
+        <div class="section-inner">
+          <h2 class="section-title" id="rituals-title"></h2>
+          <div class="rituals-grid" id="rituals-grid"></div>
+        </div>
+      </section>
+
+      <!-- CANVAS ART -->
+      <section class="section section-art" id="art">
+        <div class="ambient ambient-art" aria-hidden="true"></div>
+        <div class="section-inner art-inner">
+          <h2 class="section-title" id="art-title"></h2>
+          <p class="art-subtitle" id="art-subtitle"></p>
+          <div class="art-canvas-wrap">
+            <canvas id="love-canvas" aria-label="Рисунок сердечка и цветов"></canvas>
+          </div>
+          <p class="art-label" id="art-label"></p>
+          <button class="art-replay-btn" id="art-replay-btn" type="button">Нарисовать ещё раз ♥</button>
+        </div>
+      </section>
+
       <!-- LOVE NOTES -->
       <section class="section section-notes" id="notes">
         <div class="ambient ambient-notes" aria-hidden="true"></div>
@@ -91,6 +114,15 @@
         </div>
       </section>
 
+      <!-- WISHES -->
+      <section class="section section-wishes" id="wishes">
+        <div class="ambient ambient-wishes" aria-hidden="true"></div>
+        <div class="section-inner">
+          <h2 class="section-title" id="wishes-title"></h2>
+          <ul class="wishes-list" id="wishes-list"></ul>
+        </div>
+      </section>
+
       <!-- CLOSING -->
       <section class="section section-closing" id="closing">
         <div class="ambient ambient-closing" aria-hidden="true"></div>
@@ -104,6 +136,7 @@
     </main>
 
     <script src="./content.js"></script>
+    <script src="./art.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js"></script>
     <script src="./main.js"></script>
