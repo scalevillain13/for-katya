@@ -206,25 +206,150 @@
   }
 
   // ---- Chat ----
-  function appendChatMessage(data, key) {
-    const box = document.getElementById("chat-messages");
-    const existing = box.querySelector(`[data-key="${key}"]`);
-    if (existing) return;
+  const CHAT_PIN_THRESHOLD = 48;
+  let chatPinnedToBottom = true;
+  let chatScrollRaf = null;
 
+  function getChatBox() {
+    return document.getElementById("chat-messages");
+  }
+
+  function isChatAtBottom() {
+    const box = getChatBox();
+    return box.scrollTop <= CHAT_PIN_THRESHOLD;
+  }
+
+  function pinChatToBottom() {
+    const box = getChatBox();
+    box.scrollTop = 0;
+    chatPinnedToBottom = true;
+    updateScrollBottomButton();
+  }
+
+  function updateScrollBottomButton() {
+    const btn = document.getElementById("chat-scroll-bottom");
+    if (!btn) return;
+    const show = !isChatAtBottom();
+    btn.hidden = !show;
+    btn.classList.toggle("is-visible", show);
+    chatPinnedToBottom = !show;
+  }
+
+  function scheduleScrollBottomCheck() {
+    if (chatScrollRaf) return;
+    chatScrollRaf = requestAnimationFrame(() => {
+      chatScrollRaf = null;
+      updateScrollBottomButton();
+    });
+  }
+
+  function renderReactions(el, reactions) {
+    let wrap = el.querySelector(".chat-msg-reactions");
+    const hearts = reactions ? Object.keys(reactions).filter((uid) => reactions[uid]) : [];
+
+    if (!hearts.length) {
+      if (wrap) wrap.remove();
+      return;
+    }
+
+    if (!wrap) {
+      wrap = document.createElement("div");
+      wrap.className = "chat-msg-reactions";
+      el.appendChild(wrap);
+    }
+
+    wrap.innerHTML = "";
+    const badge = document.createElement("button");
+    badge.type = "button";
+    badge.className = `chat-reaction${hearts.includes(myId) ? " is-mine" : ""}`;
+    badge.dataset.action = "toggle-heart";
+    badge.setAttribute("aria-label", "Сердечко");
+    badge.innerHTML = `❤️ <span>${hearts.length}</span>`;
+    wrap.appendChild(badge);
+  }
+
+  function showReactionPop(el) {
+    const pop = document.createElement("span");
+    pop.className = "chat-reaction-pop";
+    pop.textContent = "❤️";
+    el.appendChild(pop);
+    pop.addEventListener("animationend", () => pop.remove());
+  }
+
+  function toggleHeart(msgKey, el) {
+    if (!chatRef || !msgKey) return;
+    const ref = chatRef.child(msgKey).child("reactions").child(myId);
+    ref.transaction((current) => (current ? null : true));
+    if (el) showReactionPop(el);
+  }
+
+  function bindMessageInteractions(el, key) {
+    if (el.dataset.bound === "1") return;
+    el.dataset.bound = "1";
+
+    let lastTap = 0;
+
+    el.addEventListener("click", (e) => {
+      const reactionBtn = e.target.closest("[data-action='toggle-heart']");
+      if (reactionBtn) {
+        e.preventDefault();
+        toggleHeart(key, el);
+        return;
+      }
+
+      const now = Date.now();
+      if (now - lastTap < 320) {
+        e.preventDefault();
+        toggleHeart(key, el);
+        lastTap = 0;
+        return;
+      }
+      lastTap = now;
+    });
+  }
+
+  function buildChatMessageEl(data, key) {
     const el = document.createElement("div");
     el.dataset.key = key;
 
     if (data.system) {
       el.className = "chat-msg chat-msg-system";
       el.textContent = data.text;
-    } else {
-      const isMe = data.name === myName;
-      el.className = `chat-msg${isMe ? " is-me" : ""}`;
-      el.innerHTML = `<div class="chat-msg-name">${escapeHtml(data.name)}</div>${escapeHtml(data.text)}`;
+      return el;
     }
 
-    box.appendChild(el);
-    box.scrollTop = box.scrollHeight;
+    const isMe = data.name === myName;
+    el.className = `chat-msg${isMe ? " is-me" : ""}`;
+    el.innerHTML = `<div class="chat-msg-name">${escapeHtml(data.name)}</div><div class="chat-msg-body">${escapeHtml(data.text)}</div>`;
+    renderReactions(el, data.reactions);
+    bindMessageInteractions(el, key);
+    return el;
+  }
+
+  function appendChatMessage(data, key, options = {}) {
+    const box = getChatBox();
+    const existing = box.querySelector(`[data-key="${key}"]`);
+    if (existing) {
+      renderReactions(existing, data.reactions);
+      return;
+    }
+
+    const wasPinned = options.forcePin || chatPinnedToBottom || isChatAtBottom();
+    const el = buildChatMessageEl(data, key);
+    box.insertBefore(el, box.firstChild);
+
+    if (wasPinned) {
+      pinChatToBottom();
+    } else {
+      scheduleScrollBottomCheck();
+    }
+  }
+
+  function updateChatMessage(key, data) {
+    const box = getChatBox();
+    const el = box.querySelector(`[data-key="${key}"]`);
+    if (!el || data.system) return;
+    renderReactions(el, data.reactions);
   }
 
   function escapeHtml(str) {
@@ -240,6 +365,7 @@
       text: text.trim(),
       ts: Date.now(),
     });
+    pinChatToBottom();
   }
 
   function postSystemMessage(text) {
@@ -289,6 +415,19 @@
       seenChatKeys.add(snap.key);
       appendChatMessage(snap.val(), snap.key);
     });
+
+    chatRef.on("child_changed", (snap) => {
+      updateChatMessage(snap.key, snap.val());
+    });
+
+    const chatBox = getChatBox();
+    chatBox.addEventListener("scroll", scheduleScrollBottomCheck, { passive: true });
+
+    document.getElementById("chat-scroll-bottom").addEventListener("click", () => {
+      pinChatToBottom();
+    });
+
+    pinChatToBottom();
 
     postSystemMessage(`${myName} вошёл в комнату`);
 
@@ -354,6 +493,7 @@
       const input = document.getElementById("chat-input");
       sendChat(input.value);
       input.value = "";
+      input.blur();
     });
   }
 

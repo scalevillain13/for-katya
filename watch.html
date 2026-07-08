@@ -78,9 +78,14 @@
 
         <aside class="room-chat-section">
           <h2 class="chat-title">Чат</h2>
-          <div class="chat-messages" id="chat-messages" aria-live="polite"></div>
+          <div class="chat-messages-wrap">
+            <div class="chat-messages" id="chat-messages" aria-live="off"></div>
+            <button type="button" class="chat-scroll-bottom" id="chat-scroll-bottom" hidden>
+              Новые сообщения ↓
+            </button>
+          </div>
           <form id="chat-form" class="chat-form">
-            <input type="text" id="chat-input" maxlength="500" placeholder="Написать..." autocomplete="off" />
+            <input type="text" id="chat-input" maxlength="500" placeholder="Написать..." autocomplete="off" enterkeyhint="send" />
             <button type="submit" class="btn-chat-send" aria-label="Отправить">↑</button>
           </form>
         </aside>
