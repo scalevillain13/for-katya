@@ -35,9 +35,16 @@
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
-  overflow-x: hidden;
   max-width: 100%;
+  width: 100%;
   overscroll-behavior-x: none;
+  overflow-x: hidden;
+}
+
+@supports (overflow: clip) {
+  html {
+    overflow-x: clip;
+  }
 }
 
 @supports (height: 100dvh) {
@@ -50,7 +57,6 @@ body {
   line-height: 1.6;
   color: var(--espresso);
   background: var(--cream);
-  overflow-x: hidden;
   max-width: 100%;
   width: 100%;
   position: relative;
@@ -58,6 +64,13 @@ body {
   padding-bottom: var(--safe-bottom);
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: none;
+  overflow-x: hidden;
+}
+
+@supports (overflow: clip) {
+  body {
+    overflow-x: clip;
+  }
 }
 
 body.intro-active {
@@ -154,6 +167,14 @@ a {
   max-width: 100%;
 }
 
+#ambient-global {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
 .float-shape {
   position: absolute;
   opacity: 0.25;
@@ -207,9 +228,16 @@ a {
 /* ---- Main Layout ---- */
 .main-content {
   position: relative;
-  overflow-x: hidden;
+  z-index: 1;
   max-width: 100%;
   width: 100%;
+  overflow-x: hidden;
+}
+
+@supports (overflow: clip) {
+  .main-content {
+    overflow-x: clip;
+  }
 }
 
 .section {
@@ -224,9 +252,9 @@ a {
   align-items: center;
   justify-content: center;
   perspective: 1200px;
-  overflow-x: hidden;
   max-width: 100%;
   width: 100%;
+  /* Do NOT set overflow-x here — it forces overflow-y:auto and breaks page scroll */
 }
 
 .section-inner {
@@ -234,7 +262,6 @@ a {
   z-index: 1;
   width: 100%;
   max-width: var(--content-max);
-  overflow-x: hidden;
 }
 
 .section-title {
@@ -1168,14 +1195,10 @@ a {
   html,
   body {
     touch-action: pan-y;
-    overflow-x: hidden !important;
+    overflow-x: hidden;
   }
 
-  .main-content,
-  .section,
-  .section-inner,
-  .ambient-layer,
-  .ambient {
+  .main-content {
     touch-action: pan-y;
     overflow-x: hidden;
     max-width: 100%;
@@ -1183,6 +1206,18 @@ a {
 
   .section {
     perspective: none;
+    max-width: 100%;
+  }
+
+  @keyframes floatSlow {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    33% { transform: translate(6px, -10px) rotate(3deg); }
+    66% { transform: translate(-4px, -6px) rotate(-2deg); }
+  }
+
+  @keyframes floatMedium {
+    0%, 100% { transform: translate(0, 0); }
+    50% { transform: translate(-6px, 10px); }
   }
 
   .photo-card {
@@ -1489,3 +1524,4 @@ body.lightbox-open {
   color: var(--white-warm);
   transform: translateY(-2px);
 }
+

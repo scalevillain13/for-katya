@@ -1,0 +1,18 @@
+{
+  "rules": {
+    "rooms": {
+      "$roomId": {
+        ".read": true,
+        ".write": true,
+        "playback": {
+          ".validate": "newData.hasChildren(['videoId', 'playing', 'time', 'updatedAt', 'by'])"
+        },
+        "chat": {
+          "$msgId": {
+            ".validate": "newData.hasChildren(['name', 'text', 'ts']) && newData.child('text').val().length <= 500"
+          }
+        }
+      }
+    }
+  }
+}

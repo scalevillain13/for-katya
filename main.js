@@ -26,23 +26,29 @@
       setTimeout(setViewportHeight, 100);
     });
 
-    if (isMobile) {
-      const lockHorizontalScroll = () => {
-        if (window.scrollX !== 0) {
-          window.scrollTo(0, window.scrollY);
-        }
-      };
-      window.addEventListener("scroll", lockHorizontalScroll, { passive: true });
-      document.addEventListener("scroll", lockHorizontalScroll, { passive: true, capture: true });
+    // Lock horizontal page scroll (common iOS rubber-band issue)
+    const lockHorizontalScroll = () => {
+      if (window.scrollX !== 0 || document.documentElement.scrollLeft !== 0) {
+        window.scrollTo(0, window.scrollY);
+        document.documentElement.scrollLeft = 0;
+        document.body.scrollLeft = 0;
+      }
+    };
+    window.addEventListener("scroll", lockHorizontalScroll, { passive: true });
+    window.addEventListener("resize", lockHorizontalScroll, { passive: true });
 
+    if (isMobile) {
       let startX = 0;
       let startY = 0;
+      let lockingHorizontal = false;
+
       document.addEventListener(
         "touchstart",
         (e) => {
           if (e.touches.length === 1) {
             startX = e.touches[0].clientX;
             startY = e.touches[0].clientY;
+            lockingHorizontal = false;
           }
         },
         { passive: true }
@@ -53,14 +59,24 @@
         (e) => {
           if (document.body.classList.contains("lightbox-open")) return;
           if (e.touches.length !== 1) return;
-          const dx = Math.abs(e.touches[0].clientX - startX);
-          const dy = Math.abs(e.touches[0].clientY - startY);
-          if (dx > dy && dx > 8) {
+          const dx = e.touches[0].clientX - startX;
+          const dy = e.touches[0].clientY - startY;
+          const absDx = Math.abs(dx);
+          const absDy = Math.abs(dy);
+
+          if (!lockingHorizontal && absDx > 6 && absDx > absDy * 1.15) {
+            lockingHorizontal = true;
+          }
+          if (lockingHorizontal) {
             e.preventDefault();
+            lockHorizontalScroll();
           }
         },
         { passive: false }
       );
+
+      document.addEventListener("touchend", lockHorizontalScroll, { passive: true });
+      document.addEventListener("touchcancel", lockHorizontalScroll, { passive: true });
     }
   }
 
@@ -393,8 +409,8 @@
       const type = types[i % types.length];
       const el = document.createElement("div");
       el.className = `float-shape float-shape--${type}`;
-      el.style.left = `${5 + Math.random() * 90}%`;
-      el.style.top = `${5 + Math.random() * 90}%`;
+      el.style.left = `${8 + Math.random() * 84}%`;
+      el.style.top = `${8 + Math.random() * 84}%`;
       el.style.opacity = String(opacity + (Math.random() * 0.12 - 0.06));
       const dur = 10 + Math.random() * 14;
       const anim = i % 3 === 0 ? "floatMedium" : "floatSlow";
@@ -407,7 +423,7 @@
         el.style.color = "var(--caramel)";
         el.style.fontSize = "0.5rem";
       } else if (type === "circle") {
-        const size = 50 + Math.random() * 120;
+        const size = isMobile ? 40 + Math.random() * 70 : 50 + Math.random() * 120;
         el.style.width = `${size}px`;
         el.style.height = `${size}px`;
       } else if (type === "dot") {
