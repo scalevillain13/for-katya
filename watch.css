@@ -43,6 +43,11 @@ input {
   touch-action: manipulation;
 }
 
+/* hidden must win over .setup-screen / .join-screen { display:flex } */
+[hidden] {
+  display: none !important;
+}
+
 .setup-screen,
 .join-screen {
   min-height: 100vh;

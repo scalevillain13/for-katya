@@ -252,6 +252,12 @@
   }
 
   // ---- Screens ----
+  function showJoinScreen() {
+    document.getElementById("setup-screen").hidden = true;
+    document.getElementById("join-screen").hidden = false;
+    document.getElementById("room-screen").hidden = true;
+  }
+
   function showSetupScreen(reason) {
     document.getElementById("setup-screen").hidden = false;
     document.getElementById("join-screen").hidden = true;
@@ -361,6 +367,7 @@
   } else if (!initFirebase()) {
     showSetupScreen("Firebase не подключился. Проверь ключи в firebase-config.js и правила базы (Rules → Publish).");
   } else {
+    showJoinScreen();
     initJoinForm();
     initRoomControls();
   }
