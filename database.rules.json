@@ -9,7 +9,7 @@
         },
         "chat": {
           "$msgId": {
-            ".validate": "newData.hasChildren(['name', 'text', 'ts']) && newData.child('text').val().length <= 500",
+            ".validate": "newData.hasChildren(['name', 'text', 'ts']) && newData.child('text').val().length <= 500 && (!newData.child('replyTo').exists() || (newData.child('replyTo').hasChildren(['key', 'name', 'text']) && newData.child('replyTo').child('text').val().length <= 120))",
             "reactions": {
               "$userId": {
                 ".validate": "newData.isBoolean()"

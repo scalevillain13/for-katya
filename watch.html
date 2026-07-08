@@ -2,7 +2,7 @@
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=overlays-content" />
     <meta name="theme-color" content="#d4847a" />
     <title>Смотрим вместе — Для Кати</title>
     <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
@@ -52,6 +52,7 @@
           <p class="room-code" id="room-code-display"></p>
         </div>
         <span class="room-sync-dot" id="sync-dot" title="Синхронизация"></span>
+        <button type="button" class="room-mini-btn" id="mini-player-btn" title="Мини-плеер" aria-label="Мини-плеер">▣</button>
       </header>
 
       <div class="room-layout">
@@ -83,6 +84,12 @@
             <button type="button" class="chat-scroll-bottom" id="chat-scroll-bottom" hidden>
               Новые сообщения ↓
             </button>
+          </div>
+          <div class="chat-reply-bar" id="chat-reply-bar" hidden>
+            <div class="chat-reply-bar-inner">
+              <span class="chat-reply-bar-label" id="chat-reply-label"></span>
+              <button type="button" class="chat-reply-cancel" id="chat-reply-cancel" aria-label="Отменить ответ">×</button>
+            </div>
           </div>
           <form id="chat-form" class="chat-form">
             <input type="text" id="chat-input" maxlength="500" placeholder="Написать..." autocomplete="off" enterkeyhint="send" />
