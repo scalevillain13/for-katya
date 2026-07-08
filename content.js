@@ -136,6 +136,28 @@ const SITE_CONTENT = {
     label: "с 8 сентября 2025",
   },
 
+  mapTitle: "Наша карта расстояния",
+  mapFrom: {
+    label: "Москва, Пыхтино",
+    short: "Я",
+    lat: 55.6253,
+    lng: 37.298,
+  },
+  mapTo: {
+    label: "Красногвардейское, Адыгея",
+    short: "Ты",
+    lat: 44.7106,
+    lng: 40.1833,
+  },
+  mapDistanceSuffix: "км между нами",
+  mapDaysPrefix: "но",
+  mapDaysSuffix: "дней вместе",
+
+  siteUrl: "https://scalevillain13.github.io/for-katya/",
+  ogImage: "images/photo-4.webp",
+
+  backToTopText: "Прочитать ещё раз ↑",
+
   closing: {
     message:
       "Принцесса, этот сайт — не просто страничка. Это маленький уголок, где ты всегда можешь почувствовать, что я рядом. Спасибо, что ты есть. Я люблю тебя, булка.",

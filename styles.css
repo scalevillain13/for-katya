@@ -403,6 +403,22 @@ a {
   transform-style: preserve-3d;
 }
 
+.photo-open-btn {
+  display: block;
+  width: 100%;
+  padding: 0;
+  min-height: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.photo-open-btn:focus-visible {
+  outline: 2px solid var(--blush-deep);
+  outline-offset: 2px;
+}
+
 .photo-card:hover .photo-frame {
   box-shadow:
     0 12px 32px var(--shadow-medium),
@@ -1240,4 +1256,236 @@ a {
   .gallery-grid {
     grid-template-columns: 1fr;
   }
+}
+
+/* ---- Scroll progress ---- */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 10001;
+  background: rgba(240, 212, 204, 0.35);
+  pointer-events: none;
+}
+
+.scroll-progress-bar {
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--blush-deep), var(--caramel));
+  transition: width 0.08s linear;
+  border-radius: 0 2px 2px 0;
+}
+
+/* ---- Lightbox ---- */
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 10002;
+  background: rgba(61, 35, 20, 0.92);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: env(safe-area-inset-top) 1rem env(safe-area-inset-bottom);
+}
+
+.lightbox.is-open {
+  display: flex;
+  animation: lightboxFadeIn 0.35s ease;
+}
+
+@keyframes lightboxFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+body.lightbox-open {
+  overflow: hidden;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: max(1rem, env(safe-area-inset-top));
+  right: max(1rem, env(safe-area-inset-right));
+  z-index: 2;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  font-size: 2rem;
+  line-height: 1;
+  color: var(--cream);
+  opacity: 0.85;
+}
+
+.lightbox-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  font-size: 2.2rem;
+  color: var(--cream);
+  opacity: 0.75;
+  padding: 0;
+}
+
+.lightbox-prev { left: max(0.25rem, env(safe-area-inset-left)); }
+.lightbox-next { right: max(0.25rem, env(safe-area-inset-right)); }
+
+.lightbox-stage {
+  max-width: min(92vw, 520px);
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  touch-action: pan-y pinch-zoom;
+}
+
+.lightbox-stage img {
+  max-width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+.lightbox-meta {
+  text-align: center;
+  margin-top: 1rem;
+  color: var(--cream);
+}
+
+.lightbox-caption {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+}
+
+.lightbox-date {
+  font-size: 0.85rem;
+  color: var(--blush-muted);
+  margin-top: 0.25rem;
+}
+
+.lightbox-counter {
+  font-size: 0.8rem;
+  opacity: 0.65;
+  margin-top: 0.5rem;
+}
+
+/* ---- Distance map ---- */
+.section-map {
+  background: linear-gradient(180deg, var(--cream) 0%, var(--blush-muted) 40%, var(--cream) 100%);
+  min-height: auto;
+}
+
+.map-inner {
+  text-align: center;
+}
+
+.map-card {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 2rem;
+  background: var(--white-warm);
+  border-radius: 24px;
+  box-shadow: 0 8px 32px var(--shadow-soft);
+  border: 1px solid rgba(232, 165, 152, 0.2);
+}
+
+.map-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.map-path-line {
+  transition: stroke-dashoffset 2.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.map-svg-label {
+  font-family: var(--font-body);
+  font-size: 11px;
+  fill: var(--espresso-soft);
+  font-weight: 600;
+}
+
+.map-svg-heart {
+  font-size: 18px;
+  fill: var(--blush-deep);
+  opacity: 0.7;
+}
+
+.map-labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 0.5rem;
+  text-align: left;
+}
+
+.map-point {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.map-point--to {
+  text-align: right;
+  flex-direction: row-reverse;
+}
+
+.map-point-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--blush-deep);
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+}
+
+.map-point--to .map-point-dot {
+  background: var(--caramel);
+}
+
+.map-point-name {
+  font-size: 0.82rem;
+  color: var(--espresso-soft);
+  line-height: 1.35;
+}
+
+.map-stat {
+  font-family: var(--font-display);
+  font-size: clamp(1.2rem, 3.5vw, 1.5rem);
+  color: var(--espresso);
+  margin-top: 1.25rem;
+}
+
+.map-stat--warm {
+  color: var(--blush-deep);
+  font-size: clamp(1.05rem, 3vw, 1.25rem);
+  margin-top: 0.35rem;
+}
+
+/* ---- Read again ---- */
+.read-again-btn {
+  margin-top: 0.5rem;
+  padding: 0.85rem 1.75rem;
+  min-height: 48px;
+  background: transparent;
+  border: 2px solid var(--blush-deep);
+  color: var(--blush-deep);
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: background 0.3s ease, color 0.3s ease, transform 0.3s ease;
+}
+
+.read-again-btn:hover {
+  background: var(--blush-deep);
+  color: var(--white-warm);
+  transform: translateY(-2px);
 }

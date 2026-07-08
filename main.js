@@ -51,6 +51,7 @@
       document.addEventListener(
         "touchmove",
         (e) => {
+          if (document.body.classList.contains("lightbox-open")) return;
           if (e.touches.length !== 1) return;
           const dx = Math.abs(e.touches[0].clientX - startX);
           const dy = Math.abs(e.touches[0].clientY - startY);
@@ -114,7 +115,76 @@
     renderLoveNotes();
     renderWishes();
     initQuiz();
+    initMap();
     updateDaysCounter();
+  }
+
+  function getDaysTogether() {
+    const start = new Date(content.relationshipStart + "T00:00:00");
+    const now = new Date();
+    return Math.max(0, Math.floor((now - start) / (1000 * 60 * 60 * 24)));
+  }
+
+  function haversineKm(from, to) {
+    const R = 6371;
+    const dLat = ((to.lat - from.lat) * Math.PI) / 180;
+    const dLon = ((to.lng - from.lng) * Math.PI) / 180;
+    const lat1 = (from.lat * Math.PI) / 180;
+    const lat2 = (to.lat * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+    return Math.round(R * 2 * Math.asin(Math.sqrt(a)));
+  }
+
+  function initMap() {
+    if (!content.mapFrom || !content.mapTo) return;
+
+    document.getElementById("map-title").textContent = content.mapTitle;
+    document.getElementById("map-from-label").textContent = content.mapFrom.label;
+    document.getElementById("map-to-label").textContent = content.mapTo.label;
+
+    const km = haversineKm(content.mapFrom, content.mapTo);
+    const days = getDaysTogether();
+
+    document.getElementById("map-distance").textContent = `${km} ${content.mapDistanceSuffix}`;
+    document.getElementById("map-days").textContent = `${content.mapDaysPrefix} ${days} ${content.mapDaysSuffix}`;
+
+    const svg = document.getElementById("map-svg");
+    const x1 = 310;
+    const y1 = 52;
+    const x2 = 90;
+    const y2 = 168;
+    const cx = 200;
+    const cy = 90;
+
+    svg.innerHTML = `
+      <defs>
+        <linearGradient id="mapGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#d4847a"/>
+          <stop offset="100%" stop-color="#c4956a"/>
+        </linearGradient>
+      </defs>
+      <path class="map-path-bg" d="M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}" fill="none" stroke="#f0d4cc" stroke-width="3" stroke-dasharray="8 8" opacity="0.6"/>
+      <path class="map-path-line" id="map-path-line" d="M ${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}" fill="none" stroke="url(#mapGrad)" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="600" stroke-dashoffset="600"/>
+      <circle cx="${x1}" cy="${y1}" r="10" fill="#faf6f2" stroke="#d4847a" stroke-width="2.5"/>
+      <circle cx="${x1}" cy="${y1}" r="4" fill="#d4847a"/>
+      <circle cx="${x2}" cy="${y2}" r="10" fill="#faf6f2" stroke="#c4956a" stroke-width="2.5"/>
+      <circle cx="${x2}" cy="${y2}" r="4" fill="#c4956a"/>
+      <text x="${x1}" y="${y1 - 16}" text-anchor="middle" class="map-svg-label">${content.mapFrom.short}</text>
+      <text x="${x2}" y="${y2 + 24}" text-anchor="middle" class="map-svg-label">${content.mapTo.short}</text>
+      <text x="200" y="115" text-anchor="middle" class="map-svg-heart">♥</text>
+    `;
+
+    ScrollTrigger.create({
+      trigger: "#map",
+      start: "top 75%",
+      once: true,
+      onEnter: () => {
+        const line = document.getElementById("map-path-line");
+        if (line) line.style.strokeDashoffset = "0";
+      },
+    });
   }
 
   function renderGallery() {
@@ -124,12 +194,14 @@
         (photo, i) => `
       <article class="photo-card" data-index="${i}">
         <div class="photo-frame">
+          <button type="button" class="photo-open-btn" data-index="${i}" aria-label="Открыть фото: ${photo.caption}">
           <div class="photo-img-wrap">
             <img src="./images/${photo.file}" alt="${photo.caption}" loading="lazy" decoding="async"
               onload="this.classList.add('is-loaded'); this.nextElementSibling?.remove()"
               onerror="this.style.display='none'">
             <span class="photo-placeholder-icon" aria-hidden="true">♥</span>
           </div>
+          </button>
           <div class="photo-caption">
             <p class="photo-caption-text">${photo.caption}</p>
             ${photo.date ? `<p class="photo-caption-date">${photo.date}</p>` : ""}
@@ -181,10 +253,123 @@
   }
 
   function updateDaysCounter() {
-    const start = new Date(content.relationshipStart + "T00:00:00");
-    const now = new Date();
-    const diff = Math.floor((now - start) / (1000 * 60 * 60 * 24));
-    document.getElementById("counter-number").textContent = Math.max(0, diff);
+    document.getElementById("counter-number").textContent = getDaysTogether();
+  }
+
+  // ---- Lightbox ----
+  let lightboxIndex = 0;
+
+  function initLightbox() {
+    const lb = document.getElementById("lightbox");
+    const img = document.getElementById("lightbox-img");
+    const caption = document.getElementById("lightbox-caption");
+    const dateEl = document.getElementById("lightbox-date");
+    const counter = document.getElementById("lightbox-counter");
+    let touchStartX = 0;
+    let touchDeltaX = 0;
+
+    function show(index) {
+      const photos = content.photos;
+      lightboxIndex = ((index % photos.length) + photos.length) % photos.length;
+      const p = photos[lightboxIndex];
+      img.src = `./images/${p.file}`;
+      img.alt = p.caption;
+      caption.textContent = p.caption;
+      dateEl.textContent = p.date || "";
+      dateEl.hidden = !p.date;
+      counter.textContent = `${lightboxIndex + 1} / ${photos.length}`;
+      lb.classList.add("is-open");
+      lb.setAttribute("aria-hidden", "false");
+      document.body.classList.add("lightbox-open");
+    }
+
+    function close() {
+      lb.classList.remove("is-open");
+      lb.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("lightbox-open");
+      img.src = "";
+    }
+
+    function next() {
+      show(lightboxIndex + 1);
+    }
+
+    function prev() {
+      show(lightboxIndex - 1);
+    }
+
+    document.getElementById("gallery-grid").addEventListener("click", (e) => {
+      const btn = e.target.closest(".photo-open-btn");
+      if (!btn) return;
+      show(Number(btn.dataset.index));
+    });
+
+    document.getElementById("lightbox-close").addEventListener("click", close);
+    document.getElementById("lightbox-next").addEventListener("click", next);
+    document.getElementById("lightbox-prev").addEventListener("click", prev);
+
+    lb.addEventListener("click", (e) => {
+      if (e.target === lb) close();
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (!lb.classList.contains("is-open")) return;
+      if (e.key === "Escape") close();
+      if (e.key === "ArrowRight") next();
+      if (e.key === "ArrowLeft") prev();
+    });
+
+    const stage = document.getElementById("lightbox-stage");
+    stage.addEventListener(
+      "touchstart",
+      (e) => {
+        touchStartX = e.changedTouches[0].clientX;
+        touchDeltaX = 0;
+      },
+      { passive: true }
+    );
+    stage.addEventListener(
+      "touchmove",
+      (e) => {
+        touchDeltaX = e.changedTouches[0].clientX - touchStartX;
+      },
+      { passive: true }
+    );
+    stage.addEventListener("touchend", () => {
+      if (Math.abs(touchDeltaX) > 50) {
+        if (touchDeltaX < 0) next();
+        else prev();
+      }
+      touchDeltaX = 0;
+    });
+  }
+
+  function initScrollProgress() {
+    const bar = document.getElementById("scroll-progress-bar");
+    const update = () => {
+      const scrollTop = window.scrollY || document.documentElement.scrollTop;
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      const pct = max > 0 ? Math.min(100, (scrollTop / max) * 100) : 0;
+      bar.style.width = `${pct}%`;
+    };
+    window.addEventListener("scroll", update, { passive: true });
+    update();
+  }
+
+  function initReadAgain() {
+    const btn = document.getElementById("read-again-btn");
+    btn.textContent = content.backToTopText || "Прочитать ещё раз ↑";
+    btn.addEventListener("click", () => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
+
+  function initPWA() {
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch(() => {});
+      });
+    }
   }
 
   // ---- Ambient decorations ----
@@ -292,6 +477,12 @@
       types: ["heart", "star", "dot"],
       count: 14,
     });
+
+    createAmbientShapes(document.querySelector(".ambient-map"), {
+      types: ["heart", "star", "flower", "dot"],
+      count: 16,
+    });
+    createSparkles(document.querySelector(".ambient-map"), 12);
 
     createAmbientShapes(document.querySelector(".ambient-wishes"), {
       types: ["star", "heart", "dot", "flower"],
@@ -451,6 +642,7 @@
       { sel: ".reason-card", trigger: "#reasons-grid" },
       { sel: ".ritual-card", trigger: "#rituals-grid" },
       { sel: ".wish-item", trigger: "#wishes-list" },
+      { sel: ".map-card", trigger: "#map" },
       { sel: ".quiz-card", trigger: "#quiz-card" },
       { sel: ".jar-inner", trigger: "#jar" },
       { sel: ".hug-inner", trigger: "#hug" },
@@ -603,15 +795,20 @@
     const btn = document.getElementById("jar-btn");
     const msgEl = document.getElementById("jar-message");
     const display = document.getElementById("jar-display");
-    let lastIndex = -1;
+    const JAR_KEY = "for-katya-jar-last-index";
+    let lastIndex = parseInt(localStorage.getItem(JAR_KEY) || "-1", 10);
+    if (Number.isNaN(lastIndex)) lastIndex = -1;
 
     btn.addEventListener("click", () => {
       const pool = content.jarMessages;
       let idx;
+      let attempts = 0;
       do {
         idx = Math.floor(Math.random() * pool.length);
-      } while (pool.length > 1 && idx === lastIndex);
+        attempts++;
+      } while (pool.length > 1 && idx === lastIndex && attempts < 20);
       lastIndex = idx;
+      localStorage.setItem(JAR_KEY, String(idx));
 
       display.classList.remove("is-revealing");
       void display.offsetWidth;
@@ -743,6 +940,10 @@
   initAmbient();
   initIntro();
   initCanvasArt();
+  initLightbox();
+  initScrollProgress();
+  initReadAgain();
+  initPWA();
   initJar();
   initHug();
   initEasterEggs();

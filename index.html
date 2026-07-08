@@ -7,8 +7,20 @@
     <meta property="og:title" content="Для Кати" />
     <meta property="og:description" content="Открой с любовью" />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://scalevillain13.github.io/for-katya/" />
+    <meta property="og:image" content="https://scalevillain13.github.io/for-katya/images/photo-4.webp" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="900" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:image" content="https://scalevillain13.github.io/for-katya/images/photo-4.webp" />
+    <meta name="theme-color" content="#d4847a" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Для Кати" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <title>Для Кати</title>
     <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+    <link rel="manifest" href="./manifest.json" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -18,6 +30,10 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
+    <div id="scroll-progress" class="scroll-progress" aria-hidden="true">
+      <div class="scroll-progress-bar" id="scroll-progress-bar"></div>
+    </div>
+
     <div id="intro-overlay" class="intro-overlay" role="dialog" aria-label="Вход">
       <div class="intro-inner">
         <div class="intro-heart" aria-hidden="true">♥</div>
@@ -30,6 +46,20 @@
     <div id="confetti-layer" class="confetti-layer" aria-hidden="true"></div>
     <div id="hug-glow" class="hug-glow" aria-hidden="true"></div>
     <div id="hug-hearts" class="hug-hearts" aria-hidden="true"></div>
+
+    <div id="lightbox" class="lightbox" role="dialog" aria-modal="true" aria-label="Фото" aria-hidden="true">
+      <button type="button" class="lightbox-close" id="lightbox-close" aria-label="Закрыть">×</button>
+      <button type="button" class="lightbox-nav lightbox-prev" id="lightbox-prev" aria-label="Предыдущее">‹</button>
+      <button type="button" class="lightbox-nav lightbox-next" id="lightbox-next" aria-label="Следующее">›</button>
+      <div class="lightbox-stage" id="lightbox-stage">
+        <img id="lightbox-img" src="" alt="" />
+        <div class="lightbox-meta">
+          <p class="lightbox-caption" id="lightbox-caption"></p>
+          <p class="lightbox-date" id="lightbox-date"></p>
+          <p class="lightbox-counter" id="lightbox-counter"></p>
+        </div>
+      </div>
+    </div>
 
     <div class="ambient-layer" id="ambient-global" aria-hidden="true"></div>
 
@@ -116,6 +146,29 @@
         </div>
       </section>
 
+      <!-- DISTANCE MAP -->
+      <section class="section section-map" id="map">
+        <div class="ambient ambient-map" aria-hidden="true"></div>
+        <div class="section-inner map-inner">
+          <h2 class="section-title" id="map-title"></h2>
+          <div class="map-card">
+            <svg class="map-svg" id="map-svg" viewBox="0 0 400 220" aria-hidden="true"></svg>
+            <div class="map-labels">
+              <div class="map-point map-point--from">
+                <span class="map-point-dot"></span>
+                <span class="map-point-name" id="map-from-label"></span>
+              </div>
+              <div class="map-point map-point--to">
+                <span class="map-point-dot"></span>
+                <span class="map-point-name" id="map-to-label"></span>
+              </div>
+            </div>
+            <p class="map-stat" id="map-distance"></p>
+            <p class="map-stat map-stat--warm" id="map-days"></p>
+          </div>
+        </div>
+      </section>
+
       <!-- WISHES -->
       <section class="section section-wishes" id="wishes">
         <div class="ambient ambient-wishes" aria-hidden="true"></div>
@@ -171,6 +224,7 @@
           <button class="closing-btn" id="closing-btn" type="button"></button>
           <p class="closing-hidden" id="closing-hidden" hidden></p>
           <div class="closing-flame" aria-hidden="true">♥</div>
+          <button type="button" class="read-again-btn" id="read-again-btn"></button>
         </div>
       </section>
     </main>
