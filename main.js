@@ -121,7 +121,7 @@
       .map(
         (r) => `
       <article class="ritual-card">
-        <span class="ritual-icon" aria-hidden="true">${r.icon}</span>
+        <span class="ritual-icon" aria-hidden="true">${window.RITUAL_ICONS?.[r.icon] || ""}</span>
         <h3 class="ritual-title">${r.title}</h3>
         <p class="ritual-text">${r.text}</p>
       </article>`
@@ -700,6 +700,10 @@
   initViewportFix();
   initSmoothScroll();
   populateContent();
+
+  const candyBtn = document.getElementById("candy-easter");
+  if (candyBtn && window.CANDY_ICON) candyBtn.innerHTML = window.CANDY_ICON;
+
   initAmbient();
   initIntro();
   initCanvasArt();
