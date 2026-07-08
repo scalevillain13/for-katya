@@ -36,7 +36,6 @@
     ctx.translate(cx, cy);
     ctx.rotate(rotation);
 
-    // Stem
     if (p > 0.05) {
       const stemP = Math.min(1, (p - 0.05) / 0.25);
       ctx.strokeStyle = COLORS.stem;
@@ -48,7 +47,6 @@
       ctx.stroke();
     }
 
-    // Petals
     const petalP = Math.min(1, Math.max(0, (p - 0.2) / 0.55));
     for (let i = 0; i < petals; i++) {
       const angle = (i / petals) * Math.PI * 2;
@@ -60,12 +58,19 @@
       ctx.globalAlpha = 0.85;
       ctx.fillStyle = i % 2 === 0 ? COLORS.petal : COLORS.petalDeep;
       ctx.beginPath();
-      ctx.ellipse(0, -radius * 0.55 * petalProgress, radius * 0.38 * petalProgress, radius * 0.55 * petalProgress, 0, 0, Math.PI * 2);
+      ctx.ellipse(
+        0,
+        -radius * 0.55 * petalProgress,
+        radius * 0.38 * petalProgress,
+        radius * 0.55 * petalProgress,
+        0,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
       ctx.restore();
     }
 
-    // Center
     const centerP = Math.min(1, Math.max(0, (p - 0.65) / 0.2));
     if (centerP > 0) {
       ctx.fillStyle = COLORS.center;
@@ -101,6 +106,9 @@
       this.ctx = canvas.getContext("2d");
       this.progress = 0;
       this.animating = false;
+      this._rafId = null;
+      this._pulseId = null;
+      this._playGeneration = 0;
       this.dpr = Math.min(window.devicePixelRatio || 1, 2);
       this.flowers = [
         { x: 0.18, y: 0.62, r: 28, petals: 6, rot: -0.4 },
@@ -111,32 +119,53 @@
         { x: 0.72, y: 0.2, r: 22, petals: 5, rot: -0.5 },
       ];
       this.heartPoints = [];
+      this._onResize = () => this.resize();
+      window.addEventListener("resize", this._onResize);
       this.resize();
-      window.addEventListener("resize", () => this.resize());
     }
 
     resize() {
-      const rect = this.canvas.parentElement.getBoundingClientRect();
-      const w = Math.min(rect.width, 520);
+      const wrap = this.canvas.parentElement;
+      if (!wrap) return;
+      const rect = wrap.getBoundingClientRect();
+      const w = Math.min(Math.max(rect.width - 48, 280), 520);
       const h = w * 0.85;
       this.canvas.style.width = `${w}px`;
       this.canvas.style.height = `${h}px`;
-      this.canvas.width = w * this.dpr;
-      this.canvas.height = h * this.dpr;
+      this.canvas.width = Math.round(w * this.dpr);
+      this.canvas.height = Math.round(h * this.dpr);
       this.ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
       this.w = w;
       this.h = h;
       this.heartPoints = buildHeartPath(w * 0.065, w * 0.5, h * 0.48, 200);
-      if (this.progress > 0) this.draw(this.progress);
+      this.draw(this.progress);
+    }
+
+    stopAll() {
+      this._playGeneration += 1;
+      if (this._rafId !== null) {
+        cancelAnimationFrame(this._rafId);
+        this._rafId = null;
+      }
+      if (this._pulseId !== null) {
+        cancelAnimationFrame(this._pulseId);
+        this._pulseId = null;
+      }
+      this.animating = false;
     }
 
     draw(progress) {
       const ctx = this.ctx;
       const w = this.w;
       const h = this.h;
-      ctx.clearRect(0, 0, w, h);
+      if (!w || !h) return;
 
-      // Soft glow behind heart
+      ctx.save();
+      ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+      ctx.globalAlpha = 1;
+      ctx.shadowBlur = 0;
+
       const glowP = Math.min(1, progress / 0.3);
       if (glowP > 0) {
         const grd = ctx.createRadialGradient(w * 0.5, h * 0.48, 0, w * 0.5, h * 0.48, w * 0.35);
@@ -146,13 +175,11 @@
         ctx.fillRect(0, 0, w, h);
       }
 
-      // Flowers (draw first, behind heart)
       this.flowers.forEach((f, i) => {
         const fp = Math.min(1, Math.max(0, (progress - 0.15 - i * 0.06) / 0.5));
         drawFlower(ctx, f.x * w, f.y * h, f.r, f.petals, fp, f.rot);
       });
 
-      // Heart outline — animated stroke
       const heartP = Math.min(1, progress / 0.55);
       const totalPts = Math.floor(this.heartPoints.length * heartP);
       if (totalPts > 1) {
@@ -170,17 +197,21 @@
         }
         ctx.stroke();
 
-        // Fill fades in
         const fillP = Math.min(1, Math.max(0, (progress - 0.45) / 0.25));
         if (fillP > 0) {
           ctx.globalAlpha = 0.18 * fillP;
           ctx.fillStyle = COLORS.heart;
+          ctx.beginPath();
+          this.heartPoints.forEach((p, i) => {
+            if (i === 0) ctx.moveTo(p.x, p.y);
+            else ctx.lineTo(p.x, p.y);
+          });
+          ctx.closePath();
           ctx.fill();
         }
         ctx.restore();
       }
 
-      // Inner smaller heart
       const innerP = Math.min(1, Math.max(0, (progress - 0.6) / 0.25));
       if (innerP > 0) {
         const innerPts = buildHeartPath(w * 0.028, w * 0.5, h * 0.48, 120);
@@ -197,13 +228,11 @@
         ctx.globalAlpha = 1;
       }
 
-      // Sparkles
       const sparkP = Math.min(1, Math.max(0, (progress - 0.75) / 0.25));
       if (sparkP > 0) {
         drawSparkles(ctx, w * 0.5, h * 0.48, 14, sparkP, progress * 10);
       }
 
-      // Drawing dot at tip
       if (heartP < 1 && totalPts > 0) {
         const tip = this.heartPoints[totalPts - 1];
         ctx.fillStyle = COLORS.heart;
@@ -211,39 +240,60 @@
         ctx.arc(tip.x, tip.y, 3, 0, Math.PI * 2);
         ctx.fill();
       }
+
+      ctx.restore();
     }
 
     play() {
-      if (this.animating) return;
+      this.stopAll();
+      const generation = this._playGeneration;
       this.animating = true;
       this.progress = 0;
-      const start = performance.now();
-      const duration = 4500;
+      this.draw(0);
 
-      const tick = (now) => {
-        const t = Math.min(1, (now - start) / duration);
-        const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-        this.progress = eased;
-        this.draw(this.progress);
-        if (t < 1) {
-          requestAnimationFrame(tick);
-        } else {
-          this.animating = false;
-          this.startIdlePulse();
-        }
-      };
-      requestAnimationFrame(tick);
+      return new Promise((resolve) => {
+        const start = performance.now();
+        const duration = 4500;
+
+        const tick = (now) => {
+          if (generation !== this._playGeneration) {
+            resolve();
+            return;
+          }
+
+          const t = Math.min(1, (now - start) / duration);
+          const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+          this.progress = eased;
+          this.draw(this.progress);
+
+          if (t < 1) {
+            this._rafId = requestAnimationFrame(tick);
+          } else {
+            this._rafId = null;
+            this.animating = false;
+            this.startIdlePulse(generation);
+            resolve();
+          }
+        };
+
+        this._rafId = requestAnimationFrame(tick);
+      });
     }
 
-    startIdlePulse() {
-      if (this._pulseId) cancelAnimationFrame(this._pulseId);
+    startIdlePulse(generation) {
+      if (this._pulseId !== null) {
+        cancelAnimationFrame(this._pulseId);
+        this._pulseId = null;
+      }
+
       const pulse = () => {
-        if (this.animating) return;
-        const t = performance.now() / 1000;
-        const pulseAlpha = 0.03 + Math.sin(t * 1.5) * 0.02;
+        if (generation !== this._playGeneration || this.animating) return;
         this.draw(1);
         const ctx = this.ctx;
+        const t = performance.now() / 1000;
+        const pulseAlpha = 0.03 + Math.sin(t * 1.5) * 0.02;
         ctx.save();
+        ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
         ctx.globalAlpha = pulseAlpha;
         ctx.fillStyle = COLORS.heartGlow;
         ctx.beginPath();
@@ -256,14 +306,19 @@
         ctx.restore();
         this._pulseId = requestAnimationFrame(pulse);
       };
-      pulse();
+
+      this._pulseId = requestAnimationFrame(pulse);
     }
 
     reset() {
-      if (this._pulseId) cancelAnimationFrame(this._pulseId);
+      this.stopAll();
       this.progress = 0;
-      this.animating = false;
       this.draw(0);
+    }
+
+    destroy() {
+      this.stopAll();
+      window.removeEventListener("resize", this._onResize);
     }
   }
 

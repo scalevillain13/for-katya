@@ -28,6 +28,8 @@
 
     <div id="easter-toast" class="easter-toast" aria-live="polite" hidden></div>
     <div id="confetti-layer" class="confetti-layer" aria-hidden="true"></div>
+    <div id="hug-glow" class="hug-glow" aria-hidden="true"></div>
+    <div id="hug-hearts" class="hug-hearts" aria-hidden="true"></div>
 
     <div class="ambient-layer" id="ambient-global" aria-hidden="true"></div>
 
@@ -120,6 +122,44 @@
         <div class="section-inner">
           <h2 class="section-title" id="wishes-title"></h2>
           <ul class="wishes-list" id="wishes-list"></ul>
+        </div>
+      </section>
+
+      <!-- QUIZ -->
+      <section class="section section-quiz" id="quiz">
+        <div class="ambient ambient-quiz" aria-hidden="true"></div>
+        <div class="section-inner">
+          <h2 class="section-title" id="quiz-title"></h2>
+          <p class="quiz-intro" id="quiz-intro"></p>
+          <div class="quiz-card" id="quiz-card"></div>
+        </div>
+      </section>
+
+      <!-- JAR -->
+      <section class="section section-jar" id="jar">
+        <div class="ambient ambient-jar" aria-hidden="true"></div>
+        <div class="section-inner jar-inner">
+          <h2 class="section-title" id="jar-title"></h2>
+          <p class="jar-hint" id="jar-hint"></p>
+          <div class="jar-display" id="jar-display">
+            <span class="jar-icon" aria-hidden="true">🫙</span>
+            <p class="jar-message" id="jar-message">...</p>
+          </div>
+          <button class="jar-btn" id="jar-btn" type="button"></button>
+        </div>
+      </section>
+
+      <!-- HUG -->
+      <section class="section section-hug" id="hug">
+        <div class="ambient ambient-hug" aria-hidden="true"></div>
+        <div class="section-inner hug-inner">
+          <h2 class="section-title" id="hug-title"></h2>
+          <p class="hug-hint" id="hug-hint"></p>
+          <button class="hug-btn" id="hug-btn" type="button" aria-label="Виртуальное объятие">
+            <span class="hug-btn-heart" aria-hidden="true">♥</span>
+            <span class="hug-btn-text" id="hug-btn-text"></span>
+          </button>
+          <p class="hug-release" id="hug-release"></p>
         </div>
       </section>
 
